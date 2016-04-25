@@ -21,17 +21,19 @@ namespace IISUtil
 
     public static void Main(string[] args)
     {
-      IISHandler handler = new IISHandler();
       bool optAllApps = false;
       bool help = false;
+      bool poolOpt = false;
       string site = "";
 
       var opts = new OptionSet () {
         { "h|help",  "show this message and exit", v => help = true },
         { "a|apps", "List sites and applications under them.", v => optAllApps = true },
+        { "p|pool", "Lists all application pools.", v => poolOpt = true }
       };
 
       List<string> extra;
+
       try
       {
         extra = opts.Parse (args);
@@ -48,20 +50,34 @@ namespace IISUtil
         return;
       }
 
-      if (extra != null && extra.Count == 1)
-        site = extra[0];
+      try
+      {
+        IISHandler handler = new IISHandler();
 
-      if (optAllApps && String.IsNullOrEmpty(site))
+        if (poolOpt)
+        {
+          handler.ListApplicationPools();
+          return;
+        }
+
+        if (extra != null && extra.Count == 1)
+          site = extra[0];
+
+        if (optAllApps && String.IsNullOrEmpty(site))
+        {
+          handler.ListAllApplications();
+        }
+        else if (!optAllApps && String.IsNullOrEmpty(site))
+        {
+          handler.ListSites();
+        }
+        else if(!String.IsNullOrEmpty(site))
+        {
+          handler.ListSiteApplications(site);
+        }
+      } catch (Exception e)
       {
-        handler.ListAllApplications();
-      }
-      else if (!optAllApps && String.IsNullOrEmpty(site))
-      {
-        handler.ListSites();
-      }
-      else if(!String.IsNullOrEmpty(site))
-      {
-        handler.ListSiteApplications(site);
+        Console.WriteLine(e.Message);
       }
     }
   }
