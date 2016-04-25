@@ -26,6 +26,45 @@ namespace IISH
         return dirs;
       }
 
+      // Recursively gets all directories in a given path,
+      public static List<string> GetDirectoriesRecursively(string path)
+      {
+        string absPath = Path.GetFullPath(path);
+        // Search files mathing the pattern
+        List<string> dirs = new List<string>(Directory.GetDirectories(absPath));
+        // Needed so foreach iteration actually works.
+        List<string> tempDirs = new List<string>(Directory.GetDirectories(absPath));
+        foreach (var dirPath in tempDirs)
+        {
+          dirs.AddRange(GetDirectoriesRecursively(dirPath));
+        }
+
+        tempDirs = new List<string>(dirs);
+        foreach (var dirPath in tempDirs)
+        {
+          if (IsExcludedFolder(dirPath))
+          {
+            dirs.Remove(dirPath);
+          }
+        }
+
+        return dirs;
+      }
+
+      // Checks if a filename is one of the IIS web application required folders.
+      // Eg. Bin, App_Browser, App_Code, App_data, App_globalresources,
+      // App_localresources, App_themes, App_webreferences
+      // For scalability, this will return true if the folder name is ever prefixed
+      // with "App_". Function ignores casing.
+      public static bool IsExcludedFolder(string path)
+      {
+        string foldername = Path.GetFileName(path);
+        if (foldername.ToLower().StartsWith("app_") || foldername.ToLower().Equals("bin"))
+          return true;
+
+        return false;
+      }
+
       public static bool ContainsWildcard(string path)
       {
         return path.Contains("*");
@@ -46,6 +85,9 @@ namespace IISH
             {
               virPath = appPath.Replace(topPath, "");
               virPath = virPath.Replace("\\", "/");
+              // Remove the trailing / because its not valid.
+              if (virPath.EndsWith("/"))
+                virPath = virPath.Substring(0, virPath.Length - 1);
             }
             else
             {
@@ -180,6 +222,7 @@ namespace IISH
         }
 
         // Get site with specific name.
+        // Returns null if site does not exist.
         public Site GetSiteByName(string name)
         {
             SiteCollection sites = Sites();
@@ -354,6 +397,8 @@ namespace IISH
             }
         }
 
+        // Gets an application from a given site by name.
+        // Returns null if app does not exist.
         public Application GetApplicationByName(Site site, string name)
         {
             Application app = site.Applications[name];
@@ -374,10 +419,35 @@ namespace IISH
             return app;
         }
 
-
+        // Removes an application from a given site.
         public void RemoveApplication(Site site, Application app)
         {
             site.Applications.Remove(app);
+            sm.CommitChanges();
         }
+
+        // Removes an application from a given site.
+        public void RemoveApplicationNonCommit(Site site, Application app)
+        {
+            site.Applications.Remove(app);
+        }
+
+        // Searches for a site with siteName and an app with appName.
+        // Removes app from site.
+        public void RemoveApplication(string siteName, string appName)
+        {
+          Site site = GetSiteByName(siteName);
+          if (site == null)
+            throw new ArgumentException("Site " + siteName + " does not exist.");
+
+          Console.WriteLine(appName);
+          Application app = GetApplicationByName(site, appName);
+          if (app == null)
+            throw new ArgumentException("Application " + appName + " does not exist inside " + siteName);
+
+          RemoveApplication(site, app);
+        }
+
+
     }
 }

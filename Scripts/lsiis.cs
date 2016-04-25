@@ -8,35 +8,48 @@ namespace IISUtil
 {
   public class ListIIS
   {
-    private static void Usage()
+    private static void Usage(OptionSet opts)
     {
+      Console.WriteLine("Lists information about IIS sites and applications.");
       Console.WriteLine("Usage: ");
-      Console.WriteLine("-a: List sites and applications under them.");
-      Console.WriteLine("-site=<site-name>: List applications under a specific web site.");
-      Console.WriteLine("-h: help");
+      Console.WriteLine("lsiis  -  Lists all sites.");
+      Console.WriteLine("lsiis <site-name>  -  Lists all applications under a site.");
+      Console.WriteLine();
+      Console.WriteLine("Options: ");
+      opts.WriteOptionDescriptions(Console.Out);
     }
 
     public static void Main(string[] args)
     {
       IISHandler handler = new IISHandler();
       bool optAllApps = false;
+      bool help = false;
       string site = "";
 
       var opts = new OptionSet () {
-        { "h|help",  "show this message and exit", v => Usage() },
+        { "h|help",  "show this message and exit", v => help = true },
         { "a|apps", "List sites and applications under them.", v => optAllApps = true },
-        { "site=", " List applications under a specific web site.", v => site = v }
       };
 
+      List<string> extra;
       try
       {
-        opts.Parse (args);
+        extra = opts.Parse (args);
       }
       catch (OptionException e) {
         Console.WriteLine (e.Message);
         Console.WriteLine ("Try `--help' for more information.");
         return;
       }
+
+      if (help)
+      {
+        Usage(opts);
+        return;
+      }
+
+      if (extra != null && extra.Count == 1)
+        site = extra[0];
 
       if (optAllApps && String.IsNullOrEmpty(site))
       {
