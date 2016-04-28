@@ -352,6 +352,16 @@ namespace IISH
             }
         }
 
+        public void SetSiteApplicationPool(Site site, ApplicationPool pool)
+        {
+          site.ApplicationDefaults.ApplicationPoolName = pool.Name;
+          foreach (var app in site.Applications)
+          {
+            app.ApplicationPoolName = pool.Name;
+          }
+          sm.CommitChanges();
+        }
+
         public void StartSite(Site site)
         {
             if (site.State == ObjectState.Stopped)

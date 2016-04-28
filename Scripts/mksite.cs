@@ -16,6 +16,7 @@ namespace IISUtil
       Console.WriteLine("mksite remove <site-name>");
       Console.WriteLine("mksite start <site-name>");
       Console.WriteLine("mksite stop <site-name>");
+      Console.WriteLine("mksite setpool <site-name> <pool-name>");
       Console.WriteLine();
       Console.WriteLine("Options: ");
       opts.WriteOptionDescriptions(Console.Out);
@@ -48,6 +49,12 @@ namespace IISUtil
       handler.StopSite(siteName);
     }
 
+    private static void SetPool(IISHandler handler, string siteName, string poolName)
+    {
+      Site site = handler.GetSiteByName(siteName);
+      ApplicationPool pool = handler.AddApplicationPool(poolName);
+      handler.SetSiteApplicationPool(site, pool);
+    }
 
     public static void Main(string[] args)
     {
@@ -122,6 +129,12 @@ namespace IISUtil
             throw new ArgumentException("Invalid number of arguments.");
 
           StopSite(handler, extra[1]);
+        }
+        else if (kind.Equals("setpool"))
+        {
+          if (!(extra.Count > 2))
+              throw new ArgumentException("Invalid number of arguments.");
+          SetPool(handler, extra[1], extra[2]);
         }
         else
           throw new ArgumentException("Second argument " + kind + " not valid.");

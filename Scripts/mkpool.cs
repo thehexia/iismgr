@@ -13,8 +13,8 @@ namespace IISUtil
     private static void Usage(OptionSet opts)
     {
       Console.WriteLine("Usage: ");
-      Console.WriteLine("mkpool add <site-name> <file-path>");
-      Console.WriteLine("mkpool remove <site-name>");
+      Console.WriteLine("mkpool add <pool-name>");
+      Console.WriteLine("mkpool remove <pool-name>");
       Console.WriteLine();
       Console.WriteLine("Options: ");
       opts.WriteOptionDescriptions(Console.Out);
@@ -61,6 +61,8 @@ namespace IISUtil
         {
           handler.RemoveApplicationPool(extra[1]);
         }
+        else
+          Usage(opts);
       }
       catch (Exception e)
       {
